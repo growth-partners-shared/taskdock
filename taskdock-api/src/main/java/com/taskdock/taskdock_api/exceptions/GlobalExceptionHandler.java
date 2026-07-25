@@ -41,8 +41,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(AuthenticationException.class)
   public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex) {
-    ApiError apiError =
-        new ApiError(HttpStatus.UNAUTHORIZED, "Authentication failed:" + ex.getMessage());
+    ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, "Invalid email or password.");
     log.error(apiError.toString(), ex);
     return ResponseEntity.status(apiError.status()).body(apiError);
   }

@@ -5,6 +5,8 @@ import java.time.Instant;
 public record UserResponse(
     String fullName,
     String email,
+    boolean emailVerified,
     String phoneNumber,
     String profileImageUrl,
-    Instant lastLoginAt) {}
+    Instant lastLoginAt,
+    Instant createdAt) {}
