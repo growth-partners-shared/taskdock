@@ -5,19 +5,18 @@ import com.taskdock.taskdock_api.entities.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface BoardRepository extends JpaRepository<Board, Long> {
 
-  long countByOwnerAndDeletedFalse(User owner);
+  boolean existsByOwnerAndNameIgnoreCase(User owner, String name);
 
-  boolean existsByOwnerAndNameIgnoreCaseAndDeletedFalse(User owner, String name);
+  boolean existsByOwnerAndNameIgnoreCaseAndIdNot(User owner, String name, Long boardId);
 
-  boolean existsByOwnerAndNameIgnoreCaseAndDeletedFalseAndIdNot(
-      User owner, String name, Long boardId);
+  List<Board> findAllByOwner(User owner);
 
-  List<Board> findAllByOwnerAndDeletedFalse(User owner);
+  long countByOwner(User owner);
 
-  Optional<Board> findByIdAndDeletedFalse(Long boardId);
-
-  Optional<Board> findByIdAndOwnerAndDeletedFalse(Long boardId, User owner);
+  Optional<Board> findByIdAndOwner(Long boardId, User owner);
 }

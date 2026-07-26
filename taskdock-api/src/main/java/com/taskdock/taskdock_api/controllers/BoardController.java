@@ -19,14 +19,21 @@ public class BoardController {
 
   BoardService boardService;
 
-  @GetMapping("/{boardId}")
-  public ResponseEntity<BoardResponse> getBoardById(@PathVariable Long boardId) {
-    return ResponseEntity.ok(boardService.getBoard(boardId));
-  }
-
   @PostMapping
   public ResponseEntity<BoardResponse> createBoard(@Valid @RequestBody CreateBoardRequest request) {
+
     return new ResponseEntity<>(boardService.createBoard(request), HttpStatus.CREATED);
+  }
+
+  @GetMapping
+  public ResponseEntity<BoardsResponse> getAccessibleBoards() {
+    return ResponseEntity.ok(boardService.getAccessibleBoards());
+  }
+
+  @GetMapping("/{boardId}/view")
+  public ResponseEntity<BoardViewResponse> getBoardView(@PathVariable Long boardId) {
+
+    return ResponseEntity.ok(boardService.getBoardView(boardId));
   }
 
   @PatchMapping("/{boardId}")
@@ -37,24 +44,26 @@ public class BoardController {
   }
 
   @DeleteMapping("/{boardId}")
-  public ResponseEntity<Void> deleteBoard(@PathVariable Long boardId) {
-    boardService.softDeleteBoard(boardId);
-    return ResponseEntity.noContent().build();
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteBoard(@PathVariable Long boardId) {
+
+    boardService.deleteBoard(boardId);
   }
 
-  @GetMapping
-  public ResponseEntity<BoardsResponse> getMyBoards() {
-    return ResponseEntity.ok(boardService.getAccessibleBoards());
+  @PatchMapping("/{boardId}/star")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void starBoard(@PathVariable Long boardId) {
+    boardService.starBoard(boardId);
+  }
+
+  @PatchMapping("/{boardId}/unstar")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void unstarBoard(@PathVariable Long boardId) {
+    boardService.unstarBoard(boardId);
   }
 
   @GetMapping("/colors")
   public ResponseEntity<List<BoardColorResponse>> getColors() {
     return ResponseEntity.ok(boardService.getColors());
-  }
-
-  @GetMapping("/{boardId}/view")
-  public ResponseEntity<BoardViewResponse> getBoardView(@PathVariable Long boardId) {
-
-    return ResponseEntity.ok(boardService.getBoardView(boardId));
   }
 }

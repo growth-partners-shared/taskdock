@@ -1,6 +1,7 @@
 package com.taskdock.taskdock_api.dtos.boards;
 
 import com.taskdock.taskdock_api.enums.BoardColor;
+import com.taskdock.taskdock_api.enums.BoardRole;
 import java.time.Instant;
 
 public record BoardResponse(
@@ -10,4 +11,7 @@ public record BoardResponse(
     BoardColor color,
     boolean starred,
     Instant createdAt,
-    Instant updatedAt) {}
+    Instant updatedAt,
+    String ownerName,
+    BoardRole currentUserRole,
+    boolean owner) {}

@@ -1,5 +1,7 @@
 package com.taskdock.taskdock_api.services.impl;
 
+import static com.taskdock.taskdock_api.utils.AppConstants.MAX_BOARDS_PER_USER;
+
 import com.taskdock.taskdock_api.dtos.boardlists.BoardListsResponse;
 import com.taskdock.taskdock_api.dtos.boards.*;
 import com.taskdock.taskdock_api.dtos.members.MemberListResponse;
@@ -25,18 +27,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class BoardServiceImpl implements BoardService {
 
+  BoardMapper boardMapper;
+  BoardMemberService boardMemberService;
+  BoardListService boardListService;
+  TaskService taskService;
   BoardRepository boardRepository;
   BoardMemberRepository boardMemberRepository;
-  BoardMemberService boardMemberService;
-  TaskService taskService;
-  BoardListService boardListService;
-  BoardMapper boardMapper;
   JwtAuthUtil jwtAuthUtil;
 
   @Override
@@ -44,14 +48,14 @@ public class BoardServiceImpl implements BoardService {
 
     User currentUser = jwtAuthUtil.getCurrentUser();
 
-    long ownedBoards = boardRepository.countByOwnerAndDeletedFalse(currentUser);
+    long ownedBoards = boardRepository.countByOwner(currentUser);
 
-    if (ownedBoards >= 3) {
-      throw new BadRequestException("Free plan allows a maximum of 3 boards.");
+    if (ownedBoards >= MAX_BOARDS_PER_USER) {
+      throw new BadRequestException(
+          "Free plan allows a maximum of " + MAX_BOARDS_PER_USER + " boards.");
     }
 
-    if (boardRepository.existsByOwnerAndNameIgnoreCaseAndDeletedFalse(
-        currentUser, request.name())) {
+    if (boardRepository.existsByOwnerAndNameIgnoreCase(currentUser, request.name())) {
 
       throw new BadRequestException("Board with the same name already exists.");
     }
@@ -66,7 +70,84 @@ public class BoardServiceImpl implements BoardService {
 
     boardMemberRepository.save(ownerMember);
 
-    return boardMapper.toBoardResponse(board);
+    return toBoardResponse(
+        board, ownerMember.getRole(), board.getOwner().getId().equals(currentUser.getId()));
+  }
+
+  @Override
+  public BoardsResponse getAccessibleBoards() {
+
+    User currentUser = jwtAuthUtil.getCurrentUser();
+
+    List<Board> ownedBoards = boardRepository.findAllByOwner(currentUser);
+
+    List<BoardMember> memberships = boardMemberRepository.findAllByUser(currentUser);
+
+    Map<Long, Board> accessibleBoards = new LinkedHashMap<>();
+
+    ownedBoards.forEach(board -> accessibleBoards.put(board.getId(), board));
+
+    memberships.stream()
+        .map(BoardMember::getBoard)
+        .forEach(board -> accessibleBoards.putIfAbsent(board.getId(), board));
+
+    long ownedCount = boardRepository.countByOwner(currentUser);
+
+    List<BoardResponse> responses =
+        accessibleBoards.values().stream()
+            .map(
+                board -> {
+                  BoardMember member = getBoardMember(board, currentUser);
+
+                  return toBoardResponse(
+                      board,
+                      member.getRole(),
+                      board.getOwner().getId().equals(currentUser.getId()));
+                })
+            .toList();
+
+    return new BoardsResponse(
+        responses,
+        ownedBoards.size(),
+        MAX_BOARDS_PER_USER,
+        responses.size() - ownedBoards.size(),
+        ownedCount < MAX_BOARDS_PER_USER);
+  }
+
+  @Override
+  @PreAuthorize("@security.canViewBoard(#boardId)")
+  public BoardViewResponse getBoardView(Long boardId) {
+
+    User currentUser = jwtAuthUtil.getCurrentUser();
+
+    // Get Board Details
+    Board board = getAccessibleBoard(boardId);
+
+    BoardMember member = getBoardMember(board, currentUser);
+
+    // Get Board Members
+    MemberListResponse members = boardMemberService.getBoardMembers(boardId);
+
+    // Get BoardLists
+    BoardListsResponse boardLists = boardListService.getBoardLists(boardId);
+
+    // Build lists with tasks
+    List<BoardListWithTasksResponse> lists =
+        boardLists.lists().stream()
+            .map(
+                list -> {
+                  TaskListResponse tasks = taskService.getTasksByBoardList(boardId, list.id());
+
+                  return new BoardListWithTasksResponse(
+                      list.id(), list.name(), list.position(), tasks.tasks());
+                })
+            .toList();
+
+    return new BoardViewResponse(
+        toBoardResponse(
+            board, member.getRole(), board.getOwner().getId().equals(currentUser.getId())),
+        members,
+        lists);
   }
 
   @Override
@@ -78,7 +159,7 @@ public class BoardServiceImpl implements BoardService {
     Board board = getOwnedBoard(boardId);
 
     if (request.name() != null
-        && boardRepository.existsByOwnerAndNameIgnoreCaseAndDeletedFalseAndIdNot(
+        && boardRepository.existsByOwnerAndNameIgnoreCaseAndIdNot(
             currentUser, request.name(), boardId)) {
 
       throw new BadRequestException("Board with the same name already exists.");
@@ -88,51 +169,19 @@ public class BoardServiceImpl implements BoardService {
 
     board = boardRepository.save(board);
 
-    return boardMapper.toBoardResponse(board);
-  }
+    BoardMember ownerMember = getBoardMember(board, currentUser);
 
-  @Override
-  @PreAuthorize("@security.canViewBoard(#boardId)")
-  public BoardResponse getBoard(Long boardId) {
-
-    return boardMapper.toBoardResponse(getAccessibleBoard(boardId));
-  }
-
-  @Override
-  public BoardsResponse getAccessibleBoards() {
-
-    User currentUser = jwtAuthUtil.getCurrentUser();
-
-    List<Board> ownedBoards = boardRepository.findAllByOwnerAndDeletedFalse(currentUser);
-
-    List<BoardMember> memberships = boardMemberRepository.findAllByUser(currentUser);
-
-    Map<Long, Board> accessibleBoards = new LinkedHashMap<>();
-
-    ownedBoards.forEach(board -> accessibleBoards.put(board.getId(), board));
-
-    memberships.stream()
-        .map(BoardMember::getBoard)
-        .filter(board -> !board.isDeleted())
-        .forEach(board -> accessibleBoards.putIfAbsent(board.getId(), board));
-
-    long ownedCount = boardRepository.countByOwnerAndDeletedFalse(currentUser);
-
-    List<BoardResponse> responses =
-        boardMapper.toBoardResponses(new ArrayList<>(accessibleBoards.values()));
-
-    return new BoardsResponse(responses, responses.size(), 3, ownedCount < 3);
+    return toBoardResponse(
+        board, ownerMember.getRole(), board.getOwner().getId().equals(currentUser.getId()));
   }
 
   @Override
   @PreAuthorize("@security.canDeleteBoard(#boardId)")
-  public void softDeleteBoard(Long boardId) {
+  public void deleteBoard(Long boardId) {
 
     Board board = getOwnedBoard(boardId);
 
-    board.setDeleted(true);
-
-    boardRepository.save(board);
+    boardRepository.delete(board);
   }
 
   @Override
@@ -144,37 +193,33 @@ public class BoardServiceImpl implements BoardService {
   }
 
   @Override
-  @PreAuthorize("@security.canViewBoard(#boardId)")
-  public BoardViewResponse getBoardView(Long boardId) {
+  public void starBoard(Long boardId) {
 
-    // Get board details
-    BoardResponse board = getBoard(boardId);
+    Board board = getOwnedBoard(boardId);
 
-    // Get board members
-    MemberListResponse members = boardMemberService.getBoardMembers(boardId);
+    board.setStarred(true);
 
-    // Get active lists
-    BoardListsResponse activeLists = boardListService.getActiveLists(boardId);
-
-    // Build lists with tasks
-    List<BoardListWithTasksResponse> lists =
-        activeLists.lists().stream()
-            .map(
-                list -> {
-                  TaskListResponse tasks = taskService.getTasksByBoardList(boardId, list.id());
-
-                  return new BoardListWithTasksResponse(
-                      list.id(), list.name(), list.position(), list.archived(), tasks.tasks());
-                })
-            .toList();
-
-    return new BoardViewResponse(board, members, lists);
+    boardRepository.save(board);
   }
+
+  @Override
+  public void unstarBoard(Long boardId) {
+
+    Board board = getOwnedBoard(boardId);
+
+    board.setStarred(false);
+
+    boardRepository.save(board);
+  }
+
+  // -----------------------------------------------------------------------------
+  // Helper Methods
+  // -----------------------------------------------------------------------------
 
   private Board getAccessibleBoard(Long boardId) {
 
     return boardRepository
-        .findByIdAndDeletedFalse(boardId)
+        .findById(boardId)
         .orElseThrow(
             () -> new ResourceNotFoundException("Board not found with id: ", boardId.toString()));
   }
@@ -184,8 +229,29 @@ public class BoardServiceImpl implements BoardService {
     User currentUser = jwtAuthUtil.getCurrentUser();
 
     return boardRepository
-        .findByIdAndOwnerAndDeletedFalse(boardId, currentUser)
+        .findByIdAndOwner(boardId, currentUser)
         .orElseThrow(
             () -> new ResourceNotFoundException("Board not found with id: ", boardId.toString()));
+  }
+
+  private BoardMember getBoardMember(Board board, User user) {
+    return boardMemberRepository
+        .findByBoardAndUser(board, user)
+        .orElseThrow(
+            () -> new ResourceNotFoundException("Board member not found", user.getEmail()));
+  }
+
+  private BoardResponse toBoardResponse(Board board, BoardRole role, boolean isOwner) {
+    return new BoardResponse(
+        board.getId(),
+        board.getName(),
+        board.getDescription(),
+        board.getColor(),
+        board.isStarred(),
+        board.getCreatedAt(),
+        board.getUpdatedAt(),
+        board.getOwner().getFullName(),
+        role,
+        isOwner);
   }
 }
