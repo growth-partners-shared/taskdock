@@ -17,7 +17,7 @@ public interface TaskMapper {
   Task toEntity(CreateTaskRequest request);
 
   @Mapping(target = "boardListId", source = "boardList.id")
-  @Mapping(target = "assigneeId", source = "assignee.id")
+  @Mapping(target = "assigneeUserId", source = "assignee.id")
   @Mapping(target = "assigneeName", source = "assignee.fullName")
   @Mapping(target = "assigneeProfileImageUrl", source = "assignee.profileImageUrl")
   @Mapping(target = "createdById", source = "createdBy.id")

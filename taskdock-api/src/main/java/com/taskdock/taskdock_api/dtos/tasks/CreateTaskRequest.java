@@ -13,5 +13,5 @@ public record CreateTaskRequest(
     TaskPriority priority,
     @NotNull(message = "Due date is required.") @Future(message = "Due date must be in the future.")
         LocalDateTime dueDate,
-    Long assigneeId,
+    Long assigneeUserId,
     @NotNull(message = "Board list is required.") Long boardListId) {}

@@ -10,4 +10,4 @@ public record UpdateTaskRequest(
     @Size(max = 5000) String description,
     TaskPriority priority,
     @Future(message = "Due date must be in the future.") LocalDateTime dueDate,
-    Long assigneeId) {}
+    Long assigneeUserId) {}

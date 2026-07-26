@@ -12,7 +12,7 @@ public record TaskResponse(
     LocalDateTime dueDate,
     Integer position,
     Long boardListId,
-    Long assigneeId,
+    Long assigneeUserId,
     String assigneeName,
     String assigneeProfileImageUrl,
     Long createdById,
