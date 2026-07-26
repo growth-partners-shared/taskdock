@@ -3,6 +3,8 @@ package com.taskdock.taskdock_api.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 
 @Entity
@@ -27,11 +29,15 @@ public class BoardList extends BaseEntity {
   @Column(nullable = false)
   Integer position;
 
-  @Builder.Default
-  @Column(nullable = false)
-  boolean archived = false;
-
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "board_id", nullable = false)
   Board board;
+
+  @OneToMany(
+      mappedBy = "boardList",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  @Builder.Default
+  List<Task> tasks = new ArrayList<>();
 }

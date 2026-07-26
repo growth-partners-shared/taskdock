@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AuthenticationException.class)
   public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex) {
     ApiError apiError =
-        new ApiError(HttpStatus.UNAUTHORIZED, "Authentication failed:" + ex.getMessage());
+        new ApiError(HttpStatus.UNAUTHORIZED, "Authentication failed: " + ex.getMessage());
     log.error(apiError.toString(), ex);
     return ResponseEntity.status(apiError.status()).body(apiError);
   }

@@ -19,4 +19,6 @@ public interface UserService {
   void changePassword(ChangePasswordRequest request);
 
   UserDetails loadUserByUsername(String username);
+
+  void deleteAccount();
 }

@@ -5,23 +5,19 @@ import java.util.List;
 
 public interface BoardService {
 
-  /** Creates a new board for the authenticated user. (Maximum 3 active boards for free users.) */
   BoardResponse createBoard(CreateBoardRequest request);
 
-  /** Updates board details. */
-  BoardResponse updateBoard(Long boardId, UpdateBoardRequest request);
-
-  /** Returns a board if the current user has access. */
-  BoardResponse getBoard(Long boardId);
-
-  /** Returns all active boards owned by the current user. */
   BoardsResponse getAccessibleBoards();
 
-  /** Soft deletes a board. */
-  void softDeleteBoard(Long boardId);
+  BoardViewResponse getBoardView(Long boardId);
 
-  /** Returns all available board colors. */
+  BoardResponse updateBoard(Long boardId, UpdateBoardRequest request);
+
+  void deleteBoard(Long boardId);
+
   List<BoardColorResponse> getColors();
 
-  BoardViewResponse getBoardView(Long boardId);
+  void starBoard(Long boardId);
+
+  void unstarBoard(Long boardId);
 }

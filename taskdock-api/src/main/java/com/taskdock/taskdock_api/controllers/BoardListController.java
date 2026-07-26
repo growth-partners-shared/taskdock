@@ -1,7 +1,6 @@
 package com.taskdock.taskdock_api.controllers;
 
 import com.taskdock.taskdock_api.dtos.boardlists.BoardListResponse;
-import com.taskdock.taskdock_api.dtos.boardlists.BoardListsResponse;
 import com.taskdock.taskdock_api.dtos.boardlists.CreateBoardListRequest;
 import com.taskdock.taskdock_api.dtos.boardlists.ReorderBoardListsRequest;
 import com.taskdock.taskdock_api.dtos.boardlists.UpdateBoardListRequest;
@@ -22,66 +21,35 @@ public class BoardListController {
 
   BoardListService boardListService;
 
-  @GetMapping
-  public ResponseEntity<BoardListsResponse> getActiveLists(@PathVariable Long boardId) {
-
-    return ResponseEntity.ok(boardListService.getActiveLists(boardId));
-  }
-
-  @GetMapping("/archived")
-  public ResponseEntity<BoardListsResponse> getArchivedLists(@PathVariable Long boardId) {
-
-    return ResponseEntity.ok(boardListService.getArchivedLists(boardId));
-  }
-
   @PostMapping
-  public ResponseEntity<BoardListResponse> createList(
+  public ResponseEntity<BoardListResponse> createBoardList(
       @PathVariable Long boardId, @Valid @RequestBody CreateBoardListRequest request) {
 
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(boardListService.createList(boardId, request));
+        .body(boardListService.createBoardList(boardId, request));
   }
 
   @PatchMapping("/{listId}")
-  public ResponseEntity<BoardListResponse> updateList(
+  public ResponseEntity<BoardListResponse> updateBoardList(
       @PathVariable Long boardId,
       @PathVariable Long listId,
       @Valid @RequestBody UpdateBoardListRequest request) {
 
-    return ResponseEntity.ok(boardListService.updateList(boardId, listId, request));
+    return ResponseEntity.ok(boardListService.updateBoardList(boardId, listId, request));
   }
 
   @PatchMapping("/reorder")
-  public ResponseEntity<Void> reorderLists(
+  @ResponseStatus(HttpStatus.OK)
+  public void reorderLists(
       @PathVariable Long boardId, @Valid @RequestBody ReorderBoardListsRequest request) {
 
-    boardListService.reorderLists(boardId, request);
-
-    return ResponseEntity.noContent().build();
-  }
-
-  @PatchMapping("/{listId}/archive")
-  public ResponseEntity<Void> archiveList(@PathVariable Long boardId, @PathVariable Long listId) {
-
-    boardListService.archiveList(boardId, listId);
-
-    return ResponseEntity.noContent().build();
-  }
-
-  @PatchMapping("/{listId}/restore")
-  public ResponseEntity<Void> restoreList(@PathVariable Long boardId, @PathVariable Long listId) {
-
-    boardListService.restoreList(boardId, listId);
-
-    return ResponseEntity.noContent().build();
+    boardListService.reorderBoardLists(boardId, request);
   }
 
   @DeleteMapping("/{listId}")
-  public ResponseEntity<Void> deleteArchivedList(
-      @PathVariable Long boardId, @PathVariable Long listId) {
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteBoardList(@PathVariable Long boardId, @PathVariable Long listId) {
 
-    boardListService.deleteArchivedList(boardId, listId);
-
-    return ResponseEntity.noContent().build();
+    boardListService.deleteBoardList(boardId, listId);
   }
 }

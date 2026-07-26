@@ -4,19 +4,21 @@ import com.taskdock.taskdock_api.dtos.tasks.*;
 import com.taskdock.taskdock_api.entities.*;
 import com.taskdock.taskdock_api.enums.BoardRole;
 import com.taskdock.taskdock_api.enums.TaskPriority;
+import com.taskdock.taskdock_api.enums.UserStatus;
 import com.taskdock.taskdock_api.exceptions.BadRequestException;
 import com.taskdock.taskdock_api.exceptions.ResourceNotFoundException;
 import com.taskdock.taskdock_api.mappers.TaskMapper;
 import com.taskdock.taskdock_api.repositories.*;
 import com.taskdock.taskdock_api.security.JwtAuthUtil;
+import com.taskdock.taskdock_api.services.NotificationService;
 import com.taskdock.taskdock_api.services.TaskService;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -24,48 +26,48 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class TaskServiceImpl implements TaskService {
 
+  TaskMapper taskMapper;
+  NotificationService notificationService;
   TaskRepository taskRepository;
   BoardRepository boardRepository;
   BoardListRepository boardListRepository;
   BoardMemberRepository boardMemberRepository;
   UserRepository userRepository;
-
-  TaskMapper taskMapper;
-
   JwtAuthUtil jwtAuthUtil;
 
   @Override
-  @PreAuthorize("@security.canEditBoard(#boardId)")
+  @PreAuthorize("@security.canCreateTask(#boardId)")
   public TaskResponse createTask(Long boardId, CreateTaskRequest request) {
 
     Board board = getBoard(boardId);
 
-    BoardList boardList = getActiveBoardList(board, request.boardListId());
+    BoardList boardList = getBoardList(board, request.boardListId());
 
     Task task = taskMapper.toEntity(request);
 
     task.setBoardList(boardList);
 
-    task.setCreatedBy(jwtAuthUtil.getCurrentUser());
+    User currentUser = jwtAuthUtil.getCurrentUser();
 
-    task.setAssignee(resolveAssignee(board, request.assigneeId()));
+    task.setCreatedBy(currentUser);
+
+    task.setAssignee(resolveAssignee(board, request.assigneeUserId()));
 
     task.setPriority(request.priority() != null ? request.priority() : TaskPriority.MEDIUM);
 
     task.setPosition(getNextTaskPosition(boardList));
 
-    return taskMapper.toTaskResponse(taskRepository.save(task));
+    task = taskRepository.save(task);
+
+    if (task.getAssignee() != null) {
+      notificationService.sendTaskAssignedNotification(task.getAssignee(), currentUser, task);
+    }
+
+    return taskMapper.toTaskResponse(task);
   }
 
   @Override
-  @PreAuthorize("@security.canViewBoard(#boardId)")
-  public TaskResponse getTask(Long boardId, Long taskId) {
-
-    return taskMapper.toTaskResponse(getTaskEntity(boardId, taskId));
-  }
-
-  @Override
-  @PreAuthorize("@security.canViewBoard(#boardId)")
+  @PreAuthorize("@security.canViewTask(#boardId)")
   public TaskListResponse getTasksByBoardList(Long boardId, Long listId) {
 
     Board board = getBoard(boardId);
@@ -86,7 +88,7 @@ public class TaskServiceImpl implements TaskService {
   }
 
   @Override
-  @PreAuthorize("@security.canEditBoard(#boardId)")
+  @PreAuthorize("@security.canUpdateTask(#boardId)")
   public TaskResponse updateTask(Long boardId, Long taskId, UpdateTaskRequest request) {
 
     Task task = getTaskEntity(boardId, taskId);
@@ -95,14 +97,57 @@ public class TaskServiceImpl implements TaskService {
 
     Board board = getBoard(boardId);
 
-    if (request.assigneeId() != null) {
-      task.setAssignee(validateAssignee(board, request.assigneeId()));
+    User currentUser = jwtAuthUtil.getCurrentUser();
+
+    User previousAssignee = task.getAssignee();
+
+    if (request.assigneeUserId() != null) {
+
+      User newAssignee = validateAssignee(board, request.assigneeUserId());
+
+      task.setAssignee(newAssignee);
+
+      if (previousAssignee == null || !previousAssignee.getId().equals(newAssignee.getId())) {
+
+        notificationService.sendTaskAssignedNotification(newAssignee, currentUser, task);
+      }
     }
-    return taskMapper.toTaskResponse(taskRepository.save(task));
+
+    task = taskRepository.save(task);
+
+    return taskMapper.toTaskResponse(task);
   }
 
   @Override
-  @PreAuthorize("@security.canEditBoard(#boardId)")
+  @PreAuthorize("@security.canUpdateTask(#boardId)")
+  public void moveTask(Long boardId, Long taskId, MoveTaskRequest request) {
+
+    Board board = getBoard(boardId);
+
+    Task task = getTaskEntity(boardId, taskId);
+
+    BoardList sourceList = task.getBoardList();
+
+    BoardList destinationList = getBoardList(board, request.destinationListId());
+
+    if (sourceList.getId().equals(destinationList.getId())) {
+      return;
+    }
+
+    int oldPosition = task.getPosition();
+
+    int newPosition = getNextTaskPosition(destinationList);
+
+    task.setBoardList(destinationList);
+    task.setPosition(newPosition);
+
+    taskRepository.saveAndFlush(task);
+
+    compactTaskPositions(sourceList, oldPosition);
+  }
+
+  @Override
+  @PreAuthorize("@security.canDeleteTask(#boardId)")
   public void deleteTask(Long boardId, Long taskId) {
 
     Task task = getTaskEntity(boardId, taskId);
@@ -116,45 +161,22 @@ public class TaskServiceImpl implements TaskService {
     compactTaskPositions(boardList, deletedPosition);
   }
 
-  @Override
-  @PreAuthorize("@security.canEditBoard(#boardId)")
-  public void moveTask(Long boardId, Long taskId, MoveTaskRequest request) {
+  // -----------------------------------------------------------------------------
+  // Helper Methods
+  // -----------------------------------------------------------------------------
 
-    Board board = getBoard(boardId);
-
-    Task task = getTaskEntity(boardId, taskId);
-
-    BoardList sourceList = task.getBoardList();
-
-    BoardList destinationList = getActiveBoardList(board, request.destinationListId());
-
-    if (sourceList.getId().equals(destinationList.getId())) {
-      return;
-    }
-
-    int oldPosition = task.getPosition();
-
-    // Remove gap from source list
-    compactTaskPositions(sourceList, oldPosition);
-
-    task.setBoardList(destinationList);
-    task.setPosition(getNextTaskPosition(destinationList));
-
-    taskRepository.save(task);
-  }
-
-  private User resolveAssignee(Board board, Long assigneeId) {
-    if (assigneeId == null) {
+  private User resolveAssignee(Board board, Long assigneeUserId) {
+    if (assigneeUserId == null) {
       return board.getOwner();
     }
 
-    return validateAssignee(board, assigneeId);
+    return validateAssignee(board, assigneeUserId);
   }
 
   private Board getBoard(Long boardId) {
 
     return boardRepository
-        .findByIdAndDeletedFalse(boardId)
+        .findById(boardId)
         .orElseThrow(
             () -> new ResourceNotFoundException("Board not found with id: ", boardId.toString()));
   }
@@ -167,16 +189,7 @@ public class TaskServiceImpl implements TaskService {
             () -> new ResourceNotFoundException("Task not found with id: ", taskId.toString()));
   }
 
-  private User getUser(Long userId) {
-
-    return userRepository
-        .findById(userId)
-        .orElseThrow(
-            () -> new ResourceNotFoundException("User not found with id: ", userId.toString()));
-  }
-
   private int getNextTaskPosition(BoardList boardList) {
-
     return java.util.Optional.ofNullable(taskRepository.findMaxPosition(boardList))
         .map(position -> position + 1)
         .orElse(1);
@@ -196,7 +209,7 @@ public class TaskServiceImpl implements TaskService {
     taskRepository.saveAll(tasks);
   }
 
-  private BoardList getActiveBoardList(Board board, Long listId) {
+  private BoardList getBoardList(Board board, Long listId) {
 
     if (listId == null) {
       throw new BadRequestException("Board list is required.");
@@ -210,16 +223,12 @@ public class TaskServiceImpl implements TaskService {
                     new ResourceNotFoundException(
                         "Board list not found with id: ", listId.toString()));
 
-    if (boardList.isArchived()) {
-      throw new BadRequestException("Board list is archived.");
-    }
-
     return boardList;
   }
 
-  private User validateAssignee(Board board, Long assigneeId) {
+  private User validateAssignee(Board board, Long assigneeUserId) {
 
-    User assignee = getUser(assigneeId);
+    User assignee = getActiveUser(assigneeUserId);
 
     // Board owner can always be assigned
     if (board.getOwner().getId().equals(assignee.getId())) {
@@ -236,5 +245,20 @@ public class TaskServiceImpl implements TaskService {
     }
 
     return assignee;
+  }
+
+  private User getActiveUser(Long userId) {
+
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(
+                () -> new ResourceNotFoundException("User not found with id: ", userId.toString()));
+
+    if (user.getStatus() != UserStatus.ACTIVE) {
+      throw new BadRequestException("User account is inactive.");
+    }
+
+    return user;
   }
 }

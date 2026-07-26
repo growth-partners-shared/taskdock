@@ -221,4 +221,73 @@ public class EmailTemplateBuilder {
             """
         .formatted(user.getFullName(), user.getEmailVerificationCode());
   }
+
+  public String buildForgotPasswordTemplate(User user) {
+
+    return """
+            <!DOCTYPE html>
+            <html>
+            <body style="margin:0;padding:40px;background:#f5f7fb;font-family:Arial,sans-serif;">
+
+            <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+
+                <h2 style="margin-top:0;color:#2563eb;">
+                    Reset Your Password 🔒
+                </h2>
+
+                <p>Hi <strong>%s</strong>,</p>
+
+                <p>
+                    We received a request to reset your <strong>TaskDock</strong> account password.
+                </p>
+
+                <p>
+                    Use the verification code below to continue resetting your password.
+                </p>
+
+                <div style="
+                    margin:32px 0;
+                    padding:18px;
+                    background:#eff6ff;
+                    border:1px dashed #2563eb;
+                    border-radius:10px;
+                    text-align:center;
+                ">
+                    <span style="
+                        font-size:34px;
+                        font-weight:bold;
+                        letter-spacing:8px;
+                        color:#2563eb;
+                    ">
+                        %s
+                    </span>
+                </div>
+
+                <p>
+                    This verification code is valid for
+                    <strong>10 minutes</strong>.
+                </p>
+
+                <p>
+                    If you did not request a password reset, you can safely ignore this email.
+                    Your password will remain unchanged.
+                </p>
+
+                <br>
+
+                <p>
+                    Stay Secure 🔐
+                </p>
+
+                <p>
+                    <strong>TaskDock Team</strong>
+                </p>
+
+            </div>
+
+            </body>
+            </html>
+            """
+        .formatted(user.getFullName(), user.getPasswordResetCode());
+  }
 }

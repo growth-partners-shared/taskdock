@@ -1,5 +1,7 @@
 package com.taskdock.taskdock_api.services.impl;
 
+import static com.taskdock.taskdock_api.utils.AppConstants.MAX_BOARD_LISTS;
+
 import com.taskdock.taskdock_api.dtos.boardlists.*;
 import com.taskdock.taskdock_api.entities.Board;
 import com.taskdock.taskdock_api.entities.BoardList;
@@ -9,7 +11,6 @@ import com.taskdock.taskdock_api.mappers.BoardListMapper;
 import com.taskdock.taskdock_api.repositories.BoardListRepository;
 import com.taskdock.taskdock_api.repositories.BoardRepository;
 import com.taskdock.taskdock_api.services.BoardListService;
-import jakarta.transaction.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,43 +22,37 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class BoardListServiceImpl implements BoardListService {
 
+  BoardListMapper boardListMapper;
   BoardRepository boardRepository;
   BoardListRepository boardListRepository;
-  BoardListMapper boardListMapper;
 
   @Override
   @PreAuthorize("@security.canEditBoard(#boardId)")
-  public BoardListResponse createList(Long boardId, CreateBoardListRequest request) {
+  public BoardListResponse createBoardList(Long boardId, CreateBoardListRequest request) {
 
     Board board = getBoard(boardId);
 
-    if (boardListRepository.countByBoard(board) >= 15) {
-      throw new BadRequestException("Maximum 15 lists are allowed.");
+    if (boardListRepository.countByBoard(board) >= MAX_BOARD_LISTS) {
+      throw new BadRequestException("Maximum " + MAX_BOARD_LISTS + " lists are allowed.");
     }
 
-    if (boardListRepository.countByBoardAndArchivedFalse(board) >= 7) {
-      throw new BadRequestException("Maximum 7 active lists are allowed.");
-    }
-
-    if (boardListRepository.existsByBoardAndNameIgnoreCaseAndArchivedFalse(board, request.name())) {
-
+    if (boardListRepository.existsByBoardAndNameIgnoreCase(board, request.name())) {
       throw new BadRequestException("List with the same name already exists.");
     }
 
     BoardList list = boardListMapper.toEntity(request);
 
     list.setBoard(board);
-    list.setArchived(false);
 
-    Integer maxPosition = boardListRepository.findMaxPositionByBoard(board);
-
-    list.setPosition(maxPosition + 1);
+    list.setPosition(boardListRepository.findMaxPositionByBoard(board) + 1);
 
     list = boardListRepository.save(list);
 
@@ -65,15 +60,32 @@ public class BoardListServiceImpl implements BoardListService {
   }
 
   @Override
+  @PreAuthorize("@security.canViewBoard(#boardId)")
+  public BoardListsResponse getBoardLists(Long boardId) {
+
+    Board board = getBoard(boardId);
+
+    List<BoardList> lists = boardListRepository.findAllByBoardOrderByPositionAsc(board);
+
+    int listsCount = lists.size();
+
+    List<BoardListResponse> responses = boardListMapper.toBoardListResponses(lists);
+
+    return new BoardListsResponse(
+        responses, listsCount, MAX_BOARD_LISTS, listsCount < MAX_BOARD_LISTS);
+  }
+
+  @Override
   @PreAuthorize("@security.canEditBoard(#boardId)")
-  public BoardListResponse updateList(Long boardId, Long listId, UpdateBoardListRequest request) {
+  public BoardListResponse updateBoardList(
+      Long boardId, Long listId, UpdateBoardListRequest request) {
 
     Board board = getBoard(boardId);
 
     BoardList list = getBoardList(board, listId);
 
     if (request.name() != null
-        && boardListRepository.existsByBoardAndNameIgnoreCaseAndArchivedFalseAndIdNot(
+        && boardListRepository.existsByBoardAndNameIgnoreCaseAndIdNot(
             board, request.name(), listId)) {
 
       throw new BadRequestException("List with the same name already exists.");
@@ -87,76 +99,55 @@ public class BoardListServiceImpl implements BoardListService {
   }
 
   @Override
-  @PreAuthorize("@security.canViewBoard(#boardId)")
-  public BoardListsResponse getActiveLists(Long boardId) {
+  @PreAuthorize("@security.canEditBoard(#boardId)")
+  @Transactional
+  public void reorderBoardLists(Long boardId, ReorderBoardListsRequest request) {
 
     Board board = getBoard(boardId);
 
-    List<BoardList> lists =
-        boardListRepository.findAllByBoardAndArchivedFalseOrderByPositionAsc(board);
+    List<BoardList> lists = boardListRepository.findAllByBoardOrderByPositionAsc(board);
 
-    List<BoardListResponse> responses = boardListMapper.toBoardListResponses(lists);
+    Map<Long, BoardList> listMap = buildListMap(lists);
 
-    long totalLists = boardListRepository.countByBoard(board);
-    long activeLists = boardListRepository.countByBoardAndArchivedFalse(board);
+    validateReorderRequest(lists, listMap, request);
 
-    return new BoardListsResponse(
-        responses,
-        (int) totalLists,
-        (int) activeLists,
-        (int) (totalLists - activeLists),
-        15,
-        7,
-        totalLists < 15);
-  }
+    moveListsToTemporaryPositions(lists);
 
-  @Override
-  @PreAuthorize("@security.canViewBoard(#boardId)")
-  public BoardListsResponse getArchivedLists(Long boardId) {
+    applyNewPositions(listMap, request);
 
-    Board board = getBoard(boardId);
-
-    List<BoardList> lists =
-        boardListRepository.findAllByBoardAndArchivedTrueOrderByPositionAsc(board);
-
-    List<BoardListResponse> responses = boardListMapper.toBoardListResponses(lists);
-
-    long totalLists = boardListRepository.countByBoard(board);
-    long activeLists = boardListRepository.countByBoardAndArchivedFalse(board);
-
-    return new BoardListsResponse(
-        responses,
-        (int) totalLists,
-        (int) activeLists,
-        (int) (totalLists - activeLists),
-        15,
-        7,
-        totalLists < 15);
+    boardListRepository.saveAll(lists);
   }
 
   @Override
   @PreAuthorize("@security.canEditBoard(#boardId)")
-  @Transactional
-  public void reorderLists(Long boardId, ReorderBoardListsRequest request) {
+  public void deleteBoardList(Long boardId, Long listId) {
 
     Board board = getBoard(boardId);
 
-    List<BoardList> activeLists =
-        boardListRepository.findAllByBoardAndArchivedFalseOrderByPositionAsc(board);
+    BoardList list = getBoardList(board, listId);
 
-    if (request.lists().size() != activeLists.size()) {
-      throw new BadRequestException("All active lists must be reordered.");
+    boardListRepository.delete(list);
+
+    shiftPositionsAfterDeletion(board, list.getPosition());
+  }
+
+  // -----------------------------------------------------------------------------
+  // Helper Methods
+  // -----------------------------------------------------------------------------
+
+  private Map<Long, BoardList> buildListMap(List<BoardList> lists) {
+    return lists.stream().collect(Collectors.toMap(BoardList::getId, Function.identity()));
+  }
+
+  private void validateReorderRequest(
+      List<BoardList> lists, Map<Long, BoardList> listMap, ReorderBoardListsRequest request) {
+
+    if (request.lists().size() != lists.size()) {
+      throw new BadRequestException("All lists must be reordered.");
     }
-
-    Map<Long, BoardList> listMap =
-        activeLists.stream().collect(Collectors.toMap(BoardList::getId, Function.identity()));
 
     Set<Long> listIds = new HashSet<>();
     Set<Integer> positions = new HashSet<>();
-
-    // ======================================================
-    // Validate request
-    // ======================================================
 
     for (ReorderBoardListRequest item : request.lists()) {
 
@@ -168,7 +159,7 @@ public class BoardListServiceImpl implements BoardListService {
         throw new BadRequestException("Duplicate position: " + item.newPosition());
       }
 
-      if (item.newPosition() < 1 || item.newPosition() > activeLists.size()) {
+      if (item.newPosition() < 1 || item.newPosition() > lists.size()) {
         throw new BadRequestException("Invalid position: " + item.newPosition());
       }
 
@@ -176,24 +167,19 @@ public class BoardListServiceImpl implements BoardListService {
         throw new BadRequestException("Invalid list id: " + item.listId());
       }
     }
+  }
 
-    // ======================================================
-    // Phase 1:
-    // Move all lists to temporary negative positions
-    // to avoid unique constraint conflicts.
-    // ======================================================
+  private void moveListsToTemporaryPositions(List<BoardList> lists) {
 
-    for (BoardList list : activeLists) {
+    for (BoardList list : lists) {
       list.setPosition(-list.getPosition());
     }
 
-    boardListRepository.saveAll(activeLists);
+    boardListRepository.saveAll(lists);
     boardListRepository.flush();
+  }
 
-    // ======================================================
-    // Phase 2:
-    // Assign requested positions.
-    // ======================================================
+  private void applyNewPositions(Map<Long, BoardList> listMap, ReorderBoardListsRequest request) {
 
     for (ReorderBoardListRequest item : request.lists()) {
 
@@ -201,67 +187,25 @@ public class BoardListServiceImpl implements BoardListService {
 
       list.setPosition(item.newPosition());
     }
-
-    boardListRepository.saveAll(activeLists);
   }
 
-  @Override
-  @PreAuthorize("@security.canEditBoard(#boardId)")
-  public void archiveList(Long boardId, Long listId) {
+  private void shiftPositionsAfterDeletion(Board board, int deletedPosition) {
 
-    Board board = getBoard(boardId);
+    List<BoardList> remainingLists =
+        boardListRepository.findAllByBoardAndPositionGreaterThanOrderByPositionAsc(
+            board, deletedPosition);
 
-    BoardList list = getBoardList(board, listId);
-
-    if (list.isArchived()) {
-      return;
+    for (BoardList list : remainingLists) {
+      list.setPosition(list.getPosition() - 1);
     }
 
-    list.setArchived(true);
-
-    boardListRepository.save(list);
+    boardListRepository.saveAll(remainingLists);
   }
-
-  @Override
-  @PreAuthorize("@security.canEditBoard(#boardId)")
-  public void restoreList(Long boardId, Long listId) {
-
-    Board board = getBoard(boardId);
-
-    BoardList list = getBoardList(board, listId);
-
-    if (boardListRepository.countByBoardAndArchivedFalse(board) >= 7) {
-      throw new BadRequestException("Maximum 7 active lists are allowed.");
-    }
-
-    list.setArchived(false);
-
-    boardListRepository.save(list);
-  }
-
-  @Override
-  @PreAuthorize("@security.canEditBoard(#boardId)")
-  public void deleteArchivedList(Long boardId, Long listId) {
-
-    Board board = getBoard(boardId);
-
-    BoardList list = getBoardList(board, listId);
-
-    if (!list.isArchived()) {
-      throw new BadRequestException("Only archived lists can be permanently deleted.");
-    }
-
-    boardListRepository.delete(list);
-  }
-
-  // =====================================================
-  // Helper Methods
-  // =====================================================
 
   private Board getBoard(Long boardId) {
 
     return boardRepository
-        .findByIdAndDeletedFalse(boardId)
+        .findById(boardId)
         .orElseThrow(
             () -> new ResourceNotFoundException("Board not found with id: ", boardId.toString()));
   }

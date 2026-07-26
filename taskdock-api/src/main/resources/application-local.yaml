@@ -1,3 +1,18 @@
 spring:
   datasource:
+    username: ganeshpotti
+    password: Ganesh@1234
     url: jdbc:postgresql://localhost:5432/taskdock
+
+  mail:
+    username: ganesh.potti27@gmail.com
+    password: ${MAIL_APP_PASSWORD}
+
+cloudinary:
+  cloud-name: ekix2wft
+  api-key: 781118221552213
+  api-secret: uEBgyIG7Ax6dtwFhY6RU-ptJ-vI
+
+app:
+  mail:
+    from: ganesh.potti27@gmail.com

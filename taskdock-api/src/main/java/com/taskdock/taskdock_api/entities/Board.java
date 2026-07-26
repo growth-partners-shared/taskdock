@@ -4,6 +4,8 @@ import com.taskdock.taskdock_api.enums.BoardColor;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -36,11 +38,23 @@ public class Board extends BaseEntity {
   @Column(nullable = false)
   boolean starred = false;
 
-  @Builder.Default
-  @Column(nullable = false)
-  boolean deleted = false;
-
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "owner_id", nullable = false)
   User owner;
+
+  @OneToMany(
+      mappedBy = "board",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  @Builder.Default
+  List<BoardList> boardLists = new ArrayList<>();
+
+  @OneToMany(
+      mappedBy = "board",
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  @Builder.Default
+  List<BoardMember> members = new ArrayList<>();
 }
