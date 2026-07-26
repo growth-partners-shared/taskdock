@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    username: ${DB_USER_NAME}
+    password: ${DB_PASSWORD}
+    url: ${DB_URL}
+
+  mail:
+    username: growthpartners.shared@gmail.com
+    password: ${MAIL_APP_PASSWORD}
+
+cloudinary:
+  cloud-name: ${CLOUD_NAME}
+  api-key: ${CLOUD_API_KEY}
+  api-secret: ${CLOUD_API_SECRET}
+
+app:
+  mail:
+    from: {EMAIL_ADDRESS}
