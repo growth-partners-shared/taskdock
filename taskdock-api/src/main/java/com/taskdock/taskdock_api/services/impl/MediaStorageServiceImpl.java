@@ -8,10 +8,12 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class MediaStorageServiceImpl implements MediaStorageService {
 
@@ -20,7 +22,6 @@ public class MediaStorageServiceImpl implements MediaStorageService {
   @Override
   public MediaUploadResponse upload(MultipartFile file, String folderName) {
     try {
-      // 1️⃣ Basic validation
       if (file == null || file.isEmpty()) {
         throw new RuntimeException("File is empty");
       }
@@ -29,7 +30,6 @@ public class MediaStorageServiceImpl implements MediaStorageService {
         throw new RuntimeException("Only image files are allowed");
       }
 
-      // 2️⃣ Upload to Cloudinary
       Map uploadResult =
           cloudinary
               .uploader()
@@ -37,12 +37,10 @@ public class MediaStorageServiceImpl implements MediaStorageService {
                   file.getBytes(),
                   ObjectUtils.asMap("folder", folderName, "resource_type", "image"));
 
-      // 3️⃣ Extract values
-      String secureUrl = uploadResult.get("secure_url").toString();
+      String imageUrl = uploadResult.get("secure_url").toString();
       String publicId = uploadResult.get("public_id").toString();
 
-      // 4️⃣ Return response DTO
-      return new MediaUploadResponse(secureUrl, publicId);
+      return new MediaUploadResponse(imageUrl, publicId);
     } catch (Exception e) {
       throw new ResponseStatusException(
           HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload image to Cloudinary");
@@ -56,7 +54,6 @@ public class MediaStorageServiceImpl implements MediaStorageService {
           cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", "image"));
       String deletionResult = result.get("result").toString();
 
-      // Cloudinary returns: "ok" or "not found"
       if (!"ok".equals(deletionResult) && !"not found".equals(deletionResult)) {
         throw new ResponseStatusException(
             HttpStatus.INTERNAL_SERVER_ERROR, "Failed to delete old image from Cloudinary");
