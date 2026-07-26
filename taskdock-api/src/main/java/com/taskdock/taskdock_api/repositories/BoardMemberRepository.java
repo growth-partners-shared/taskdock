@@ -4,9 +4,11 @@ import com.taskdock.taskdock_api.entities.Board;
 import com.taskdock.taskdock_api.entities.BoardMember;
 import com.taskdock.taskdock_api.entities.User;
 import com.taskdock.taskdock_api.enums.BoardRole;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -39,4 +41,12 @@ public interface BoardMemberRepository extends JpaRepository<BoardMember, Long> 
             """)
   Optional<BoardRole> findRoleByBoardIdAndUserId(
       @Param("boardId") Long boardId, @Param("userId") Long userId);
+
+  @Modifying
+  @Transactional
+  @Query("""
+    DELETE FROM BoardMember bm
+    WHERE bm.user = :user
+""")
+  void deleteAllByUser(@Param("user") User user);
 }

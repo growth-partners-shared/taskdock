@@ -1,7 +1,6 @@
 package com.taskdock.taskdock_api.controllers;
 
 import com.taskdock.taskdock_api.dtos.members.InviteMemberRequest;
-import com.taskdock.taskdock_api.dtos.members.MemberListResponse;
 import com.taskdock.taskdock_api.dtos.members.MemberResponse;
 import com.taskdock.taskdock_api.dtos.members.UpdateMemberRoleRequest;
 import com.taskdock.taskdock_api.services.BoardMemberService;
@@ -21,11 +20,6 @@ public class BoardMemberController {
 
   BoardMemberService boardMemberService;
 
-  @GetMapping
-  public ResponseEntity<MemberListResponse> getMembers(@PathVariable Long boardId) {
-    return ResponseEntity.ok(boardMemberService.getBoardMembers(boardId));
-  }
-
   @PostMapping
   public ResponseEntity<MemberResponse> inviteMember(
       @PathVariable Long boardId, @RequestBody @Valid InviteMemberRequest inviteMemberRequest) {
@@ -43,9 +37,8 @@ public class BoardMemberController {
   }
 
   @DeleteMapping("/{memberId}")
-  public ResponseEntity<Void> deleteBoardMember(
-      @PathVariable Long boardId, @PathVariable Long memberId) {
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteBoardMember(@PathVariable Long boardId, @PathVariable Long memberId) {
     boardMemberService.deleteMember(boardId, memberId);
-    return ResponseEntity.noContent().build();
   }
 }
