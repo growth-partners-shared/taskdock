@@ -8,19 +8,13 @@ import com.taskdock.taskdock_api.dtos.boardlists.UpdateBoardListRequest;
 
 public interface BoardListService {
 
-  BoardListResponse createList(Long boardId, CreateBoardListRequest request);
+  BoardListResponse createBoardList(Long boardId, CreateBoardListRequest request);
 
-  BoardListResponse updateList(Long boardId, Long listId, UpdateBoardListRequest request);
+  BoardListsResponse getBoardLists(Long boardId);
 
-  BoardListsResponse getActiveLists(Long boardId);
+  BoardListResponse updateBoardList(Long boardId, Long listId, UpdateBoardListRequest request);
 
-  BoardListsResponse getArchivedLists(Long boardId);
+  void reorderBoardLists(Long boardId, ReorderBoardListsRequest request);
 
-  void reorderLists(Long boardId, ReorderBoardListsRequest request);
-
-  void archiveList(Long boardId, Long listId);
-
-  void restoreList(Long boardId, Long listId);
-
-  void deleteArchivedList(Long boardId, Long listId);
+  void deleteBoardList(Long boardId, Long listId);
 }
