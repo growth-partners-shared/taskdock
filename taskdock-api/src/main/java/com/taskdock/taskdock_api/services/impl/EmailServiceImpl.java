@@ -16,17 +16,25 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EmailServiceImpl implements EmailService {
 
+  EmailTemplateBuilder templateBuilder;
+  MailProperties mailProperties;
   JavaMailSender mailSender;
 
-  EmailTemplateBuilder templateBuilder;
+  @Override
+  @Async
+  public void sendEmailVerificationEmail(User registeredUser) {
+    String html = templateBuilder.buildEmailVerificationTemplate(registeredUser);
 
-  MailProperties mailProperties;
+    sendEmail(registeredUser.getEmail(), EmailSubject.EMAIL_VERIFICATION, html);
+  }
 
   @Override
   @Async
@@ -56,14 +64,16 @@ public class EmailServiceImpl implements EmailService {
   }
 
   @Override
-  @Async
-  public void sendEmailVerificationEmail(User registeredUser) {
-    String html = templateBuilder.buildEmailVerificationTemplate(registeredUser);
+  public void sendResetPasswordVerificationEmail(User user) {
+    String html = templateBuilder.buildForgotPasswordTemplate(user);
 
-    sendEmail(registeredUser.getEmail(), EmailSubject.EMAIL_VERIFICATION, html);
+    sendEmail(user.getEmail(), EmailSubject.PASSWORD_RESET_VERIFICATION, html);
   }
 
-  // Helper Method
+  // -----------------------------------------------------------------------------
+  // Helper Methods
+  // -----------------------------------------------------------------------------
+
   private void sendEmail(String to, String subject, String html) {
 
     try {

@@ -23,31 +23,41 @@ public class UserController {
 
   @GetMapping
   public ResponseEntity<UserProfileResponse> getProfile() {
+
     return ResponseEntity.ok(userService.getProfile());
   }
 
   @PatchMapping
   public ResponseEntity<UserProfileResponse> updateProfile(
       @Valid @RequestBody UpdateUserProfileRequest request) {
+
     return ResponseEntity.ok(userService.updateProfile(request));
   }
 
   @PatchMapping("/profile-image")
   public ResponseEntity<UserProfileResponse> updateProfileImage(@RequestPart MultipartFile file) {
+
     return ResponseEntity.ok(userService.updateProfileImage(file));
   }
 
   @DeleteMapping("/profile-image")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public ResponseEntity<Void> deleteProfileImage() {
+  public void deleteProfileImage() {
+
     userService.deleteProfileImage();
-    return ResponseEntity.noContent().build();
   }
 
   @PatchMapping("/change-password")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @ResponseStatus(HttpStatus.OK)
   public void changePassword(@Valid @RequestBody ChangePasswordRequest request) {
 
     userService.changePassword(request);
+  }
+
+  @DeleteMapping
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteAccount() {
+
+    userService.deleteAccount();
   }
 }

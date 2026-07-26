@@ -11,4 +11,6 @@ public final class EmailSubject {
   public static final String TASK_ASSIGNED = "A Task Has Been Assigned to You";
 
   public static final String EMAIL_VERIFICATION = "Verify your TaskDock Account Email";
+
+  public static final String PASSWORD_RESET_VERIFICATION = "Reset Your TaskDock Password";
 }

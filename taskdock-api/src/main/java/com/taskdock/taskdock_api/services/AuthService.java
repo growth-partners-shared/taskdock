@@ -42,4 +42,29 @@ public interface AuthService {
    * @return authenticated user details along with JWT access token
    */
   AuthResponse loginUser(LoginRequest request);
+
+  /**
+   * Initiates the forgot password flow by generating a one-time verification code and sending it to
+   * the user's registered email address.
+   *
+   * @param request forgot password request containing the user's email
+   */
+  void forgotPassword(ForgotPasswordRequest request);
+
+  /**
+   * Verifies the password reset verification code and issues a temporary password reset token that
+   * can be used to reset the password.
+   *
+   * @param request password reset verification request
+   * @return temporary password reset verification token
+   */
+  ResetPasswordVerificationResponse verifyResetPassword(VerifyEmailRequest request);
+
+  /**
+   * Resets the user's password after validating the password reset token. The reset token is
+   * invalidated after a successful password update.
+   *
+   * @param request password reset request containing the new password and reset token
+   */
+  void resetPassword(ResetPasswordRequest request);
 }

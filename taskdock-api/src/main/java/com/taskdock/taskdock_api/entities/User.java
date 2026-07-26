@@ -1,8 +1,7 @@
 package com.taskdock.taskdock_api.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.taskdock.taskdock_api.enums.UserStatus;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
 import java.util.Collection;
@@ -50,6 +49,16 @@ public class User extends BaseEntity implements UserDetails {
 
   @Column Instant emailVerificationExpiry;
 
+  @Column(length = 6)
+  String passwordResetCode;
+
+  Instant passwordResetExpiry;
+
+  @Column(length = 100)
+  String passwordResetToken;
+
+  Instant passwordResetTokenExpiry;
+
   @NotBlank
   @Pattern(regexp = "\\d{10}")
   @Column(nullable = false, length = 10)
@@ -61,6 +70,10 @@ public class User extends BaseEntity implements UserDetails {
   @Column String profileImagePublicId;
 
   @Column Instant lastLoginAt;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  UserStatus status;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {

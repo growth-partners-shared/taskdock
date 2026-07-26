@@ -1,5 +1,6 @@
 package com.taskdock.taskdock_api.dtos.users;
 
+import com.taskdock.taskdock_api.enums.UserStatus;
 import java.time.Instant;
 
 public record UserProfileResponse(
@@ -9,4 +10,5 @@ public record UserProfileResponse(
     String phoneNumber,
     String profileImageUrl,
     Instant createdAt,
-    Instant updatedAt) {}
+    Instant updatedAt,
+    UserStatus status) {}

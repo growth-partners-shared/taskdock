@@ -58,4 +58,12 @@ public interface EmailService {
    * @param task assigned task
    */
   void sendTaskAssignedEmail(User assignee, User assignedBy, Task task);
+
+  /**
+   * Sends an email containing a one-time verification code required to verify the user's identity
+   * before allowing a password reset.
+   *
+   * @param user user requesting a password reset
+   */
+  void sendResetPasswordVerificationEmail(User user);
 }

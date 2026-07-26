@@ -37,4 +37,12 @@ public interface NotificationService {
    * @param task assigned task
    */
   void sendTaskAssignedNotification(User assignee, User assignedBy, Task task);
+
+  /**
+   * Sends a password reset verification notification containing a one-time verification code to the
+   * user's registered email address.
+   *
+   * @param user user requesting a password reset
+   */
+  void sendPasswordResetVerificationNotification(User user);
 }

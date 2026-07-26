@@ -30,4 +30,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
         AND u.createdAt < :time
     """)
   int deleteExpiredUsers(@Param("time") Instant time);
+
+  boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
 }

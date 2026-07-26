@@ -21,26 +21,47 @@ public class AuthController {
   @PostMapping("/register")
   public ResponseEntity<RegisterResponse> registerUser(
       @Valid @RequestBody RegisterRequest request) {
+
     return ResponseEntity.ok(authService.registerUser(request));
   }
 
   @PostMapping("/verify-email")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @ResponseStatus(HttpStatus.OK)
   public void verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+
     authService.verifyEmail(request);
   }
 
   @PostMapping("/resend-verification")
-  public ResponseEntity<Void> resendVerification(
-      @RequestBody @Valid ResendVerificationRequest request) {
+  @ResponseStatus(HttpStatus.OK)
+  public void resendVerification(@RequestBody @Valid ResendVerificationRequest request) {
 
     authService.resendVerification(request);
-
-    return ResponseEntity.ok().build();
   }
 
   @PostMapping("/login")
   public ResponseEntity<AuthResponse> loginUser(@Valid @RequestBody LoginRequest request) {
     return ResponseEntity.ok(authService.loginUser(request));
+  }
+
+  @PostMapping("/forgot-password")
+  @ResponseStatus(HttpStatus.OK)
+  public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+
+    authService.forgotPassword(request);
+  }
+
+  @PostMapping("/verify-reset-password")
+  public ResponseEntity<ResetPasswordVerificationResponse> verifyResetPassword(
+      @Valid @RequestBody VerifyEmailRequest request) {
+
+    return ResponseEntity.ok(authService.verifyResetPassword(request));
+  }
+
+  @PostMapping("/reset-password")
+  @ResponseStatus(HttpStatus.OK)
+  public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+
+    authService.resetPassword(request);
   }
 }
