@@ -1,0 +1,40 @@
+server:
+  port: 8080
+  servlet.context-path: /api/v1
+
+spring:
+  application:
+    name: taskdock-api
+
+  profiles:
+    active: local
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+#          ddl-auto: create-drop
+    show-sql: true
+    properties:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+      format_sql: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+jwt:
+  secret-key: ouhwfrouhjwf0yuhoqr3huy9wfrouhowfy9hwrfouhwefi9nF2
+  expiration: 86400000
+
+app:
+  mail:
+    application-name: TaskDock
