@@ -29,7 +29,10 @@ export const userApi = {
   ): Promise<UserProfileResponse> {
     const response = await fetch(`${BASE_URL}/account`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(request),
     });
 
@@ -44,7 +47,10 @@ export const userApi = {
   async changePassword(request: ChangePasswordRequest): Promise<void> {
     const response = await fetch(`${BASE_URL}/account/change-password`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(request),
     });
 

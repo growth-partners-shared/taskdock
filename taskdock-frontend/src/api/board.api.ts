@@ -43,7 +43,10 @@ export const boardApi = {
   async createBoard(request: CreateBoardRequest): Promise<BoardResponse> {
     const response = await fetch(`${BASE_URL}/boards`, {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(request),
     });
 
@@ -61,7 +64,10 @@ export const boardApi = {
   ): Promise<BoardResponse> {
     const response = await fetch(`${BASE_URL}/boards/${boardId}`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(request),
     });
 

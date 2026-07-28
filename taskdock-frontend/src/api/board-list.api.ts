@@ -18,7 +18,10 @@ export const boardListApi = {
   ): Promise<BoardListResponse> {
     const response = await fetch(`${BASE_URL}/boards/${boardId}/lists`, {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(request),
     });
 
@@ -39,7 +42,10 @@ export const boardListApi = {
       `${BASE_URL}/boards/${boardId}/lists/${listId}`,
       {
         method: "PATCH",
-        headers: getAuthHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(request),
       },
     );
@@ -60,7 +66,10 @@ export const boardListApi = {
       `${BASE_URL}/boards/${boardId}/lists/reorder`,
       {
         method: "PATCH",
-        headers: getAuthHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(request),
       },
     );
