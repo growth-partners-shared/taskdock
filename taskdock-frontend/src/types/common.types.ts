@@ -1,3 +1,7 @@
 export type BoardRole = "OWNER" | "EDITOR" | "VIEWER";
 
-export type UserStatus = "ACTIVE" | "INACTIVE" | "PENDING";
+export enum UserStatus {
+  PENDING = "PENDING",
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}
