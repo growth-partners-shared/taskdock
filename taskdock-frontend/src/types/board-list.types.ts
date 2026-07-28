@@ -14,7 +14,7 @@ export interface BoardListResponse {
   updatedAt: string;
 }
 
-export interface BoardListsResponse {
+export interface BoardListsSummaryResponse {
   lists: BoardListResponse[];
   totalLists: number;
   maxTotalLists: number;

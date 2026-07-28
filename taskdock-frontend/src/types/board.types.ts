@@ -54,7 +54,7 @@ export interface BoardColorResponse {
 export interface BoardViewResponse {
   board: BoardResponse;
   members: MemberListResponse;
-  lists: BoardListWithTasksResponse[];
+  lists: BoardListsResponses;
 }
 
 export interface BoardListWithTasksResponse {
@@ -62,4 +62,11 @@ export interface BoardListWithTasksResponse {
   name: string;
   position: number;
   tasks: TaskResponse[];
+}
+
+export interface BoardListsResponses {
+  lists: BoardListWithTasksResponse[];
+  totalLists: number;
+  maxTotalLists: number;
+  canCreateList: boolean;
 }

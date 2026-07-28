@@ -17,7 +17,10 @@ export const boardMemberApi = {
   ): Promise<MemberResponse> {
     const response = await fetch(`${BASE_URL}/boards/${boardId}/members`, {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(request),
     });
 
@@ -38,7 +41,10 @@ export const boardMemberApi = {
       `${BASE_URL}/boards/${boardId}/members/${memberId}`,
       {
         method: "PATCH",
-        headers: getAuthHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(request),
       },
     );
