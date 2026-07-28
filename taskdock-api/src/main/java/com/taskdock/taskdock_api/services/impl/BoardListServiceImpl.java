@@ -61,7 +61,7 @@ public class BoardListServiceImpl implements BoardListService {
 
   @Override
   @PreAuthorize("@security.canViewBoard(#boardId)")
-  public BoardListsResponse getBoardLists(Long boardId) {
+  public BoardListsSummaryResponse getBoardLists(Long boardId) {
 
     Board board = getBoard(boardId);
 
@@ -71,7 +71,7 @@ public class BoardListServiceImpl implements BoardListService {
 
     List<BoardListResponse> responses = boardListMapper.toBoardListResponses(lists);
 
-    return new BoardListsResponse(
+    return new BoardListsSummaryResponse(
         responses, listsCount, MAX_BOARD_LISTS, listsCount < MAX_BOARD_LISTS);
   }
 

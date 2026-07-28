@@ -21,7 +21,7 @@ public class BoardController {
 
   @PostMapping
   public ResponseEntity<BoardResponse> createBoard(@Valid @RequestBody CreateBoardRequest request) {
-
+    System.out.println("Inside controller");
     return new ResponseEntity<>(boardService.createBoard(request), HttpStatus.CREATED);
   }
 

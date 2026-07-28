@@ -2,7 +2,7 @@ package com.taskdock.taskdock_api.services.impl;
 
 import static com.taskdock.taskdock_api.utils.AppConstants.MAX_BOARDS_PER_USER;
 
-import com.taskdock.taskdock_api.dtos.boardlists.BoardListsResponse;
+import com.taskdock.taskdock_api.dtos.boardlists.BoardListsSummaryResponse;
 import com.taskdock.taskdock_api.dtos.boards.*;
 import com.taskdock.taskdock_api.dtos.members.MemberListResponse;
 import com.taskdock.taskdock_api.dtos.tasks.TaskListResponse;
@@ -16,11 +16,11 @@ import com.taskdock.taskdock_api.exceptions.ResourceNotFoundException;
 import com.taskdock.taskdock_api.mappers.BoardMapper;
 import com.taskdock.taskdock_api.repositories.BoardMemberRepository;
 import com.taskdock.taskdock_api.repositories.BoardRepository;
-import com.taskdock.taskdock_api.utils.JwtAuthUtil;
 import com.taskdock.taskdock_api.services.BoardListService;
 import com.taskdock.taskdock_api.services.BoardMemberService;
 import com.taskdock.taskdock_api.services.BoardService;
 import com.taskdock.taskdock_api.services.TaskService;
+import com.taskdock.taskdock_api.utils.JwtAuthUtil;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -129,7 +129,7 @@ public class BoardServiceImpl implements BoardService {
     MemberListResponse members = boardMemberService.getBoardMembers(boardId);
 
     // Get BoardLists
-    BoardListsResponse boardLists = boardListService.getBoardLists(boardId);
+    BoardListsSummaryResponse boardLists = boardListService.getBoardLists(boardId);
 
     // Build lists with tasks
     List<BoardListWithTasksResponse> lists =
@@ -142,12 +142,16 @@ public class BoardServiceImpl implements BoardService {
                       list.id(), list.name(), list.position(), tasks.tasks());
                 })
             .toList();
+    // Build lists Wrapper
+    BoardListsResponse boardListsResponses =
+        new BoardListsResponse(
+            lists, boardLists.totalLists(), boardLists.maxTotalLists(), boardLists.canCreateList());
 
     return new BoardViewResponse(
         toBoardResponse(
             board, member.getRole(), board.getOwner().getId().equals(currentUser.getId())),
         members,
-        lists);
+        boardListsResponses);
   }
 
   @Override
