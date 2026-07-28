@@ -13,7 +13,7 @@ import com.taskdock.taskdock_api.repositories.BoardMemberRepository;
 import com.taskdock.taskdock_api.repositories.BoardRepository;
 import com.taskdock.taskdock_api.repositories.TaskRepository;
 import com.taskdock.taskdock_api.repositories.UserRepository;
-import com.taskdock.taskdock_api.security.JwtAuthUtil;
+import com.taskdock.taskdock_api.utils.JwtAuthUtil;
 import com.taskdock.taskdock_api.services.BoardService;
 import com.taskdock.taskdock_api.services.MediaStorageService;
 import com.taskdock.taskdock_api.services.UserService;
