@@ -15,7 +15,7 @@ import com.taskdock.taskdock_api.repositories.BoardMemberRepository;
 import com.taskdock.taskdock_api.repositories.BoardRepository;
 import com.taskdock.taskdock_api.repositories.TaskRepository;
 import com.taskdock.taskdock_api.repositories.UserRepository;
-import com.taskdock.taskdock_api.security.JwtAuthUtil;
+import com.taskdock.taskdock_api.utils.JwtAuthUtil;
 import com.taskdock.taskdock_api.services.BoardMemberService;
 import com.taskdock.taskdock_api.services.NotificationService;
 import java.util.List;

@@ -16,7 +16,7 @@ import com.taskdock.taskdock_api.exceptions.ResourceNotFoundException;
 import com.taskdock.taskdock_api.mappers.BoardMapper;
 import com.taskdock.taskdock_api.repositories.BoardMemberRepository;
 import com.taskdock.taskdock_api.repositories.BoardRepository;
-import com.taskdock.taskdock_api.security.JwtAuthUtil;
+import com.taskdock.taskdock_api.utils.JwtAuthUtil;
 import com.taskdock.taskdock_api.services.BoardListService;
 import com.taskdock.taskdock_api.services.BoardMemberService;
 import com.taskdock.taskdock_api.services.BoardService;

@@ -1,4 +1,4 @@
-package com.taskdock.taskdock_api.security;
+package com.taskdock.taskdock_api.utils;
 
 import com.taskdock.taskdock_api.entities.User;
 import com.taskdock.taskdock_api.exceptions.ResourceNotFoundException;

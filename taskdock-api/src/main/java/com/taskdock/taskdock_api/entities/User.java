@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -81,7 +80,7 @@ public class User extends BaseEntity implements UserDetails {
   }
 
   @Override
-  public @Nullable String getPassword() {
+  public String getPassword() {
     return passwordHash;
   }
 
