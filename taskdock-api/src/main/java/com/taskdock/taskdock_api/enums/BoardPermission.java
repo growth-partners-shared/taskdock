@@ -1,10 +1,8 @@
 package com.taskdock.taskdock_api.enums;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public enum BoardPermission {
   BOARD_VIEW("board:view"),
   BOARD_EDIT("board:edit"),
@@ -20,4 +18,8 @@ public enum BoardPermission {
   TASK_MOVE("task:move");
 
   private final String value;
+
+  BoardPermission(String value) {
+    this.value = value;
+  }
 }

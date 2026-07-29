@@ -1,6 +1,7 @@
 package com.taskdock.taskdock_api.services.impl;
 
 import com.taskdock.taskdock_api.services.JwtService;
+import com.taskdock.taskdock_api.utils.ExpiryConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -22,9 +23,6 @@ public class JwtServiceImpl implements JwtService {
   @Value("${jwt.secret-key}")
   private String jwtSecretKey;
 
-  @Value("${jwt.expiration}")
-  private long jwtExpiration;
-
   private SecretKey getSecretKey() {
     return Keys.hmacShaKeyFor(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
   }
@@ -33,8 +31,7 @@ public class JwtServiceImpl implements JwtService {
   public String generateToken(UserDetails userDetails) {
 
     Date now = new Date();
-
-    Date expiry = new Date(now.getTime() + jwtExpiration);
+    Date expiry = new Date(now.getTime() + ExpiryConstants.JWT_EXPIRY.toMillis());
 
     return Jwts.builder()
         .subject(userDetails.getUsername())

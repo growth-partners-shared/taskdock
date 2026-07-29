@@ -4,19 +4,50 @@ import com.taskdock.taskdock_api.dtos.boardlists.BoardListResponse;
 import com.taskdock.taskdock_api.dtos.boardlists.CreateBoardListRequest;
 import com.taskdock.taskdock_api.dtos.boardlists.UpdateBoardListRequest;
 import com.taskdock.taskdock_api.entities.BoardList;
+import java.util.Collections;
 import java.util.List;
-import org.mapstruct.*;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface BoardListMapper {
+@Component
+public class BoardListMapper {
 
-  BoardList toEntity(CreateBoardListRequest request);
+  public BoardList toEntity(CreateBoardListRequest request) {
+    if (request == null) {
+      return null;
+    }
 
-  BoardListResponse toBoardListResponse(BoardList boardList);
+    return BoardList.builder().name(request.name()).build();
+  }
 
-  List<BoardListResponse> toBoardListResponses(List<BoardList> boardLists);
+  public BoardListResponse toBoardListResponse(BoardList boardList) {
+    if (boardList == null) {
+      return null;
+    }
 
-  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-  void updateBoardListFromRequest(
-      UpdateBoardListRequest request, @MappingTarget BoardList boardList);
+    return new BoardListResponse(
+        boardList.getId(),
+        boardList.getName(),
+        boardList.getPosition(),
+        boardList.getCreatedAt(),
+        boardList.getUpdatedAt());
+  }
+
+  public List<BoardListResponse> toBoardListResponses(List<BoardList> boardLists) {
+    if (boardLists == null) {
+      return Collections.emptyList();
+    }
+
+    return boardLists.stream().map(this::toBoardListResponse).toList();
+  }
+
+  public void updateBoardListFromRequest(UpdateBoardListRequest request, BoardList boardList) {
+
+    if (request == null || boardList == null) {
+      return;
+    }
+
+    if (request.name() != null) {
+      boardList.setName(request.name());
+    }
+  }
 }

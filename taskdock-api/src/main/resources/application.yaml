@@ -15,7 +15,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-#          ddl-auto: create-drop
+    #          ddl-auto: create-drop
     show-sql: true
     properties:
       dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -33,7 +33,6 @@ spring:
 
 jwt:
   secret-key: ouhwfrouhjwf0yuhoqr3huy9wfrouhowfy9hwrfouhwefi9nF2
-  expiration: 86400000
 
 app:
   mail:
