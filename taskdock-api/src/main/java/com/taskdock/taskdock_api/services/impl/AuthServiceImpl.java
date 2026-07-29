@@ -148,6 +148,9 @@ public class AuthServiceImpl implements AuthService {
 
     User user = getUserByEmail(request.email());
 
+    if (user.getStatus().equals(INACTIVE))
+      throw new ResourceNotFoundException("User not found with email: ", request.email());
+
     if (!Boolean.TRUE.equals(user.getEmailVerified())) {
       throw new BadRequestException("Please verify your email before logging in.");
     }
