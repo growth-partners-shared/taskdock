@@ -16,9 +16,13 @@ export const taskApi = {
     boardId: number,
     request: CreateBoardTaskRequest,
   ): Promise<TaskResponse> {
+    console.log("request", request);
     const response = await fetch(`${BASE_URL}/boards/${boardId}/tasks`, {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify(request),
     });
 
@@ -35,11 +39,15 @@ export const taskApi = {
     taskId: number,
     request: UpdateBoardTaskRequest,
   ): Promise<TaskResponse> {
+    console.log("request", request);
     const response = await fetch(
       `${BASE_URL}/boards/${boardId}/tasks/${taskId}`,
       {
         method: "PATCH",
-        headers: getAuthHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(request),
       },
     );
@@ -61,7 +69,10 @@ export const taskApi = {
       `${BASE_URL}/boards/${boardId}/tasks/${taskId}/move`,
       {
         method: "PATCH",
-        headers: getAuthHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(request),
       },
     );
