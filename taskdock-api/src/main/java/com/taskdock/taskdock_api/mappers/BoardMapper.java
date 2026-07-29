@@ -3,13 +3,38 @@ package com.taskdock.taskdock_api.mappers;
 import com.taskdock.taskdock_api.dtos.boards.CreateBoardRequest;
 import com.taskdock.taskdock_api.dtos.boards.UpdateBoardRequest;
 import com.taskdock.taskdock_api.entities.Board;
-import org.mapstruct.*;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface BoardMapper {
+@Component
+public class BoardMapper {
 
-  Board toEntity(CreateBoardRequest request);
+  public Board toEntity(CreateBoardRequest request) {
+    if (request == null) {
+      return null;
+    }
 
-  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-  void updateBoardFromRequest(UpdateBoardRequest request, @MappingTarget Board board);
+    return Board.builder()
+        .name(request.name())
+        .description(request.description())
+        .color(request.color())
+        .build();
+  }
+
+  public void updateBoardFromRequest(UpdateBoardRequest request, Board board) {
+    if (request == null || board == null) {
+      return;
+    }
+
+    if (request.name() != null) {
+      board.setName(request.name());
+    }
+
+    if (request.description() != null) {
+      board.setDescription(request.description());
+    }
+
+    if (request.color() != null) {
+      board.setColor(request.color());
+    }
+  }
 }

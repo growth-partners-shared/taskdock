@@ -5,33 +5,74 @@ import com.taskdock.taskdock_api.dtos.tasks.TaskResponse;
 import com.taskdock.taskdock_api.dtos.tasks.UpdateTaskRequest;
 import com.taskdock.taskdock_api.entities.Task;
 import java.util.List;
-import org.mapstruct.*;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface TaskMapper {
+@Component
+public class TaskMapper {
 
-  @Mapping(target = "position", ignore = true)
-  @Mapping(target = "boardList", ignore = true)
-  @Mapping(target = "assignee", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  Task toEntity(CreateTaskRequest request);
+  public Task toEntity(CreateTaskRequest request) {
+    if (request == null) {
+      return null;
+    }
 
-  @Mapping(target = "boardListId", source = "boardList.id")
-  @Mapping(target = "assigneeUserId", source = "assignee.id")
-  @Mapping(target = "assigneeName", source = "assignee.fullName")
-  @Mapping(target = "assigneeProfileImageUrl", source = "assignee.profileImageUrl")
-  @Mapping(target = "createdById", source = "createdBy.id")
-  @Mapping(target = "createdByName", source = "createdBy.fullName")
-  @Mapping(target = "createdByProfileImageUrl", source = "createdBy.profileImageUrl")
-  TaskResponse toTaskResponse(Task task);
+    return Task.builder()
+        .title(request.title())
+        .description(request.description())
+        .priority(request.priority())
+        .dueDate(request.dueDate())
+        .build();
+  }
 
-  List<TaskResponse> toTaskResponses(List<Task> tasks);
+  public TaskResponse toTaskResponse(Task task) {
+    if (task == null) {
+      return null;
+    }
 
-  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "position", ignore = true)
-  @Mapping(target = "boardList", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "assignee", ignore = true)
-  void updateTaskFromRequest(UpdateTaskRequest request, @MappingTarget Task task);
+    return new TaskResponse(
+        task.getId(),
+        task.getTitle(),
+        task.getDescription(),
+        task.getPriority(),
+        task.getDueDate(),
+        task.getPosition(),
+        task.getBoardList() != null ? task.getBoardList().getId() : null,
+        task.getAssignee() != null ? task.getAssignee().getId() : null,
+        task.getAssignee() != null ? task.getAssignee().getFullName() : null,
+        task.getAssignee() != null ? task.getAssignee().getProfileImageUrl() : null,
+        task.getCreatedBy() != null ? task.getCreatedBy().getId() : null,
+        task.getCreatedBy() != null ? task.getCreatedBy().getFullName() : null,
+        task.getCreatedBy() != null ? task.getCreatedBy().getProfileImageUrl() : null,
+        task.getCreatedAt(),
+        task.getUpdatedAt());
+  }
+
+  public List<TaskResponse> toTaskResponses(List<Task> tasks) {
+    if (tasks == null || tasks.isEmpty()) {
+      return List.of();
+    }
+
+    return tasks.stream().map(this::toTaskResponse).toList();
+  }
+
+  public void updateTaskFromRequest(UpdateTaskRequest request, Task task) {
+    if (request == null || task == null) {
+      return;
+    }
+
+    if (request.title() != null) {
+      task.setTitle(request.title());
+    }
+
+    if (request.description() != null) {
+      task.setDescription(request.description());
+    }
+
+    if (request.priority() != null) {
+      task.setPriority(request.priority());
+    }
+
+    if (request.dueDate() != null) {
+      task.setDueDate(request.dueDate());
+    }
+  }
 }

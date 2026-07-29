@@ -12,8 +12,8 @@ import com.taskdock.taskdock_api.repositories.UserRepository;
 import com.taskdock.taskdock_api.services.AuthService;
 import com.taskdock.taskdock_api.services.JwtService;
 import com.taskdock.taskdock_api.services.NotificationService;
+import com.taskdock.taskdock_api.utils.ExpiryConstants;
 import com.taskdock.taskdock_api.utils.OtpGenerator;
-import com.taskdock.taskdock_api.utils.VerificationConstants;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -89,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
       throw new BadRequestException("Phone number already exists.");
     }
 
-    User user = userMapper.toEntity(request);
+    User user = toEntity(request);
 
     user.setPasswordHash(passwordEncoder.encode(request.password()));
     user.setEmailVerified(false);
@@ -221,7 +221,7 @@ public class AuthServiceImpl implements AuthService {
 
     user.setPasswordResetToken(UUID.randomUUID().toString());
     user.setPasswordResetTokenExpiry(
-        Instant.now().plus(VerificationConstants.RESET_PASSWORD_TOKEN_EXPIRY));
+        Instant.now().plus(ExpiryConstants.RESET_PASSWORD_TOKEN_EXPIRY));
 
     userRepository.save(user);
 
@@ -276,15 +276,14 @@ public class AuthServiceImpl implements AuthService {
 
     user.setEmailVerificationCode(OtpGenerator.generateOtp());
 
-    user.setEmailVerificationExpiry(Instant.now().plus(VerificationConstants.EMAIL_OTP_EXPIRY));
+    user.setEmailVerificationExpiry(Instant.now().plus(ExpiryConstants.EMAIL_OTP_EXPIRY));
   }
 
   private void generatePasswordResetVerificationCode(User user) {
 
     user.setPasswordResetCode(OtpGenerator.generateOtp());
 
-    user.setPasswordResetExpiry(
-        Instant.now().plus(VerificationConstants.RESET_PASSWORD_OTP_EXPIRY));
+    user.setPasswordResetExpiry(Instant.now().plus(ExpiryConstants.RESET_PASSWORD_OTP_EXPIRY));
   }
 
   private void validateEmailNotVerified(User user) {
@@ -292,5 +291,14 @@ public class AuthServiceImpl implements AuthService {
     if (Boolean.TRUE.equals(user.getEmailVerified())) {
       throw new BadRequestException("Email is already verified.");
     }
+  }
+
+  private User toEntity(RegisterRequest request) {
+    return User.builder()
+        .fullName(request.fullName())
+        .email(request.email())
+        .phoneNumber(request.phoneNumber())
+        .passwordHash(passwordEncoder.encode(request.password()))
+        .build();
   }
 }
