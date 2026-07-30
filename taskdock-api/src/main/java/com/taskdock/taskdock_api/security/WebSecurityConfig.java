@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -42,24 +43,25 @@ public class WebSecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-        .authorizeHttpRequests(
-            auth ->
-                auth
+            .authorizeHttpRequests(
+                    auth ->
+                            auth
 
-                    // Public APIs
-                    .requestMatchers("/auth/**")
-                    .permitAll()
+                                    // Allow all CORS preflight requests
+                                    .requestMatchers(HttpMethod.OPTIONS, "/**")
+                                    .permitAll()
 
-                    // Swagger
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
-                    .permitAll()
+                                    // Public APIs
+                                    .requestMatchers("/auth/**")
+                                    .permitAll()
 
-                    //                                            .anyRequest()
-                    //                                            .permitAll()
+                                    // Swagger
+                                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
+                                    .permitAll()
 
-                    // Everything else
-                    .anyRequest()
-                    .authenticated())
+                                    // Protected APIs
+                                    .anyRequest()
+                                    .authenticated())
         .exceptionHandling(
             exception ->
                 exception
