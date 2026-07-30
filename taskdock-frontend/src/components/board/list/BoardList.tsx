@@ -69,6 +69,7 @@ export function BoardList({
                   key={task.id}
                   taskId={task.id}
                   boardListId={list.id}
+                  disabled={role === "VIEWER"}
                 >
                   <TaskCard
                     task={task}
