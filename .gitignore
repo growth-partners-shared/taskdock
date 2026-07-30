@@ -21,8 +21,11 @@ lerna-debug.log*
 # Environment
 ############################
 
-.env
-.env.*
+# Local environment variables
+.env.local
+.env.*.local
+
+# Local override files
 *.local
 
 ############################

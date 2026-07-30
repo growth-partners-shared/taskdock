@@ -2,7 +2,8 @@
 import { AuthResponse } from "@/types";
 import { UserStatus } from "@/types/common.types";
 
-export const BASE_URL = "http://localhost:8080/api/v1";
+export const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
 const AUTH_TOKEN_KEY = "auth_token";
 const AUTH_TOKEN_EXPIRY_KEY = "auth_token_expiry";
