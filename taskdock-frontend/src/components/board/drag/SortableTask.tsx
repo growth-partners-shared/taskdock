@@ -7,10 +7,16 @@ import { useSortable } from "@dnd-kit/sortable";
 interface Props {
   taskId: number;
   boardListId: number;
+  disabled: boolean;
   children: ReactNode;
 }
 
-export function SortableTask({ taskId, boardListId, children }: Props) {
+export function SortableTask({
+  taskId,
+  boardListId,
+  disabled,
+  children,
+}: Props) {
   const {
     attributes,
     listeners,
@@ -20,7 +26,7 @@ export function SortableTask({ taskId, boardListId, children }: Props) {
     isDragging,
   } = useSortable({
     id: taskId,
-
+    disabled,
     data: {
       type: "TASK",
       taskId,
@@ -34,11 +40,17 @@ export function SortableTask({ taskId, boardListId, children }: Props) {
     opacity: isDragging ? 0 : 1,
     pointerEvents: isDragging ? "none" : "auto",
     zIndex: isDragging ? 999 : "auto",
-    touchAction: "none",
+    touchAction: disabled ? "auto" : "none",
+    cursor: disabled ? "default" : "grab",
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...(!disabled ? attributes : {})}
+      {...(!disabled ? listeners : {})}
+    >
       {children}
     </div>
   );
