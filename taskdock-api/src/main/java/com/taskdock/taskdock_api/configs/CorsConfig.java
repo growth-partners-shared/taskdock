@@ -8,18 +8,23 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
 
-  @Bean
-  public WebMvcConfigurer corsConfigurer() {
-    return new WebMvcConfigurer() {
-      @Override
-      public void addCorsMappings(CorsRegistry registry) {
-        registry
-            .addMapping("/**")
-            .allowedOrigins("http://localhost:5175")
-            .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-            .allowedHeaders("*")
-            .allowCredentials(true);
-      }
-    };
-  }
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+
+                registry
+                        .addMapping("/**")
+                        .allowedOriginPatterns(
+                                "http://localhost:5175",
+                                "https://taskdock-frontend.onrender.com"
+                        )
+                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
+            }
+        };
+    }
 }
