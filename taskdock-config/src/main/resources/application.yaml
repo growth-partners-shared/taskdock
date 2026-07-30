@@ -1,0 +1,22 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: taskdock-config
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/growth-partners-shared/taskdock-config-server.git
+          default-label: main
+          username: ${CONFIG_SERVER_USERNAME}
+          password: ${CONFIG_SERVER_PAT}
+          clone-on-start: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
