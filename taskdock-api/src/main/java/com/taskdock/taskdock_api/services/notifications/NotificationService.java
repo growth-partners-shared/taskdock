@@ -1,4 +1,4 @@
-package com.taskdock.taskdock_api.services;
+package com.taskdock.taskdock_api.services.notifications;
 
 import com.taskdock.taskdock_api.entities.Board;
 import com.taskdock.taskdock_api.entities.Task;

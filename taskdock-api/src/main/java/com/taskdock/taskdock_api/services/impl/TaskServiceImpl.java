@@ -9,8 +9,8 @@ import com.taskdock.taskdock_api.exceptions.BadRequestException;
 import com.taskdock.taskdock_api.exceptions.ResourceNotFoundException;
 import com.taskdock.taskdock_api.mappers.TaskMapper;
 import com.taskdock.taskdock_api.repositories.*;
-import com.taskdock.taskdock_api.services.NotificationService;
 import com.taskdock.taskdock_api.services.TaskService;
+import com.taskdock.taskdock_api.services.notifications.NotificationService;
 import com.taskdock.taskdock_api.utils.JwtAuthUtil;
 import java.util.List;
 import lombok.AccessLevel;
@@ -59,9 +59,10 @@ public class TaskServiceImpl implements TaskService {
 
     task = taskRepository.save(task);
 
-    if (task.getAssignee() != null) {
-      notificationService.sendTaskAssignedNotification(task.getAssignee(), currentUser, task);
-    }
+    // todo: future improvement
+    //    if (task.getAssignee() != null)
+    //      notificationService.sendTaskAssignedNotification(task.getAssignee(), currentUser, task);
+    //
 
     return taskMapper.toTaskResponse(task);
   }
@@ -107,10 +108,10 @@ public class TaskServiceImpl implements TaskService {
 
       task.setAssignee(newAssignee);
 
-      if (previousAssignee == null || !previousAssignee.getId().equals(newAssignee.getId())) {
+      // todo: future improvement
+      //      if (previousAssignee == null || !previousAssignee.getId().equals(newAssignee.getId()))
+      //        notificationService.sendTaskAssignedNotification(newAssignee, currentUser, task);
 
-        notificationService.sendTaskAssignedNotification(newAssignee, currentUser, task);
-      }
     }
 
     task = taskRepository.save(task);
