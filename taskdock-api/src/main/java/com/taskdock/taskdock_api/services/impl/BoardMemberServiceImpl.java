@@ -16,8 +16,6 @@ import com.taskdock.taskdock_api.repositories.BoardRepository;
 import com.taskdock.taskdock_api.repositories.TaskRepository;
 import com.taskdock.taskdock_api.repositories.UserRepository;
 import com.taskdock.taskdock_api.services.BoardMemberService;
-import com.taskdock.taskdock_api.services.notifications.NotificationService;
-import com.taskdock.taskdock_api.utils.JwtAuthUtil;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -33,12 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class BoardMemberServiceImpl implements BoardMemberService {
 
   BoardMemberMapper boardMemberMapper;
-  NotificationService notificationService;
   BoardRepository boardRepository;
   BoardMemberRepository boardMemberRepository;
   UserRepository userRepository;
   TaskRepository taskRepository;
-  JwtAuthUtil jwtAuthUtil;
 
   @Override
   @PreAuthorize("@security.canManageMembers(#boardId)")
@@ -71,8 +67,6 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
     member = boardMemberRepository.save(member);
 
-    // todo: future improvement
-    //    notificationService.sendBoardInvitation(user, jwtAuthUtil.getCurrentUser(), board);
     return boardMemberMapper.toMemberResponse(member);
   }
 
