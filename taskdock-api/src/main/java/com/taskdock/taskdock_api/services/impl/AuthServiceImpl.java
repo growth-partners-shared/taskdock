@@ -11,7 +11,7 @@ import com.taskdock.taskdock_api.mappers.UserMapper;
 import com.taskdock.taskdock_api.repositories.UserRepository;
 import com.taskdock.taskdock_api.services.AuthService;
 import com.taskdock.taskdock_api.services.JwtService;
-import com.taskdock.taskdock_api.services.NotificationService;
+import com.taskdock.taskdock_api.services.notifications.NotificationService;
 import com.taskdock.taskdock_api.utils.ExpiryConstants;
 import com.taskdock.taskdock_api.utils.OtpGenerator;
 import java.time.Instant;
@@ -19,12 +19,14 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -126,7 +128,8 @@ public class AuthServiceImpl implements AuthService {
 
     userRepository.save(user);
 
-    notificationService.sendUserWelcomeNotification(user);
+    // todo: future improvement
+    //    notificationService.sendUserWelcomeNotification(user);
   }
 
   @Override

@@ -74,4 +74,27 @@ public class GlobalExceptionHandler {
     log.error(apiError.toString(), ex);
     return ResponseEntity.status(apiError.status()).body(apiError);
   }
+
+  @ExceptionHandler(RateLimitExceededException.class)
+  public ResponseEntity<ApiError> handleRateLimitExceeded(RateLimitExceededException ex) {
+
+    ApiError apiError = new ApiError(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+
+    log.warn(apiError.toString());
+
+    return ResponseEntity.status(apiError.status()).body(apiError);
+  }
+
+  @ExceptionHandler(NotificationProviderException.class)
+  public ResponseEntity<ApiError> handleNotificationProviderException(
+      NotificationProviderException ex) {
+
+    ApiError apiError =
+        new ApiError(
+            HttpStatus.BAD_GATEWAY, "Unable to send notification. Please try again later.");
+
+    log.error(apiError.toString(), ex);
+
+    return ResponseEntity.status(apiError.status()).body(apiError);
+  }
 }

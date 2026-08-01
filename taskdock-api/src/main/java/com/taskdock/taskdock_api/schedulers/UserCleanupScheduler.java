@@ -23,10 +23,6 @@ public class UserCleanupScheduler {
 
     Instant threshold = Instant.now().minus(1, ChronoUnit.HOURS);
 
-    int deleted = userRepository.deleteExpiredUsers(threshold);
-
-    if (deleted > 0) {
-      System.out.println("Deleted " + deleted + " expired unverified users.");
-    }
+    userRepository.deleteExpiredUsers(threshold);
   }
 }

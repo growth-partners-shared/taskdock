@@ -106,16 +106,18 @@ export default function Verify() {
   };
 
   const handleResend = async () => {
-    if (!isEmailVerification) {
-      return;
-    }
-
     try {
       setResending(true);
 
-      await authApi.resendVerification({
-        email: state.email,
-      });
+      if (isEmailVerification) {
+        await authApi.resendVerification({
+          email: state.email,
+        });
+      } else {
+        await authApi.forgotPassword({
+          email: state.email,
+        });
+      }
 
       toast({
         title: "Verification Code Sent",
@@ -154,7 +156,7 @@ export default function Verify() {
         resending={resending}
         canResend={!isRunning}
         countdown={seconds}
-        showResend={isEmailVerification}
+        showResend={true}
         onVerify={handleVerify}
         onResend={handleResend}
       />

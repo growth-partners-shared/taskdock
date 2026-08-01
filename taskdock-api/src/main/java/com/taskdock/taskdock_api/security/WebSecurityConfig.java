@@ -43,25 +43,25 @@ public class WebSecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(
-                    auth ->
-                            auth
+        .authorizeHttpRequests(
+            auth ->
+                auth
 
-                                    // Allow all CORS preflight requests
-                                    .requestMatchers(HttpMethod.OPTIONS, "/**")
-                                    .permitAll()
+                    // Allow all CORS preflight requests
+                    .requestMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll()
 
-                                    // Public APIs
-                                    .requestMatchers("/auth/**")
-                                    .permitAll()
+                    // Public APIs
+                    .requestMatchers("/auth/**")
+                    .permitAll()
 
-                                    // Swagger
-                                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
-                                    .permitAll()
+                    // Swagger
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
+                    .permitAll()
 
-                                    // Protected APIs
-                                    .anyRequest()
-                                    .authenticated())
+                    // Protected APIs
+                    .anyRequest()
+                    .authenticated())
         .exceptionHandling(
             exception ->
                 exception
