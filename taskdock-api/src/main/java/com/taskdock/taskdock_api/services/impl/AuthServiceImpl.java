@@ -127,9 +127,6 @@ public class AuthServiceImpl implements AuthService {
     user.setStatus(ACTIVE);
 
     userRepository.save(user);
-
-    // todo: future improvement
-    //    notificationService.sendUserWelcomeNotification(user);
   }
 
   @Override
