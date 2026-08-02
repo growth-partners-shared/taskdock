@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
 
-  @Value("${jwt.secret-key}")
+  @Value("${jwt.secret-key:${JWT_SECRET}}")
   private String jwtSecretKey;
 
   private SecretKey getSecretKey() {
